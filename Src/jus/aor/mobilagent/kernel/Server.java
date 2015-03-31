@@ -53,6 +53,8 @@ public final class Server {
 			/* temporisation de mise en place du server d'agents */
 			Thread.sleep(1000);
 		}catch(Exception ex){
+			System.out.println("server l56");
+			System.out.println(ex);
 			logger.log(Level.FINE," erreur durant le lancement du serveur"+this,ex);
 			return;
 		}
@@ -66,10 +68,11 @@ public final class Server {
 	 */
 	public final void addService(String name, String classeName, String codeBase, Object... args) {
 		try {
-			//A COMPLETER
+			System.out.println("Ajout de service");
 			agentServer.addService(name, classeName, codeBase, args);
-			//----
 		}catch(Exception ex){
+			System.out.println("server l75");
+			System.out.println(ex);
 			logger.log(Level.FINE," erreur durant le lancement du serveur"+this,ex);
 			return;
 		}
@@ -84,60 +87,39 @@ public final class Server {
 	 */
 	public final void deployAgent(String classeName, Object[] args, String codeBase, List<String> etapeAddress, List<String> etapeAction) {
 		try {
-			//A COMPLETER
-			BAMAgentClassLoader loader = new BAMAgentClassLoader(new URL[]{new URL("file:///"+System.getProperty("user.dir")+codeBase)},this.getClass().getClassLoader());
+			System.out.println("Deploiment d'un agent");
+			String path = "file:///"+System.getProperty("user.dir")+codeBase;
+			System.out.println("path : " + path);
+			BAMAgentClassLoader loader = new BAMAgentClassLoader(new URL[]{new URL(path)},this.getClass().getClassLoader());
+			System.out.println("lulu");
 			Class<?> c = Class.forName(classeName,true,(ClassLoader)loader);
 			/*
 			Method m =c.getMethod(c.getName(), Class.forName("Object[]"));
 			System.out.println(m.toString()+" here \n");
 			Agent a1=(Agent) m.invoke((Object) null,(Object) null);*/
-			try{
-				Object[] obj = (Object[]) new Object() ;
+			//Object[] obj = (Object[]) new Object() ;
 //				Agent a1 = (Agent) c.newInstance();
-				Agent a1 = (Agent) c.getConstructor(Object[].class).newInstance(new Object[]{args});
-				System.out.println("on a créé l'agent");
-				a1.init(agentServer, name);//added
-				Iterator<String> iterAd = etapeAddress.iterator();
-				Iterator<String> iterAc = etapeAction.iterator();
-				System.out.println("on l'a initialisé ");
-				while(iterAd.hasNext()){
-					String s = iterAc.next();
-					//System.out.println("tourne "+s);
-					String s1 = iterAd.next();
-					//System.out.println("tourne "+s1);
-					URI e1 = new URI(s1);
-					String e2 =c.getField(s).getName();
-//					System.out.println(e2);
-					_Action ac = (_Action) c.getField(s).get(a1);
-					//System.out.println(ac.toString());
-					a1.addEtape(new Etape(e1, ac));
-					//System.out.println(s1);
-				}
-				//System.out.println("on deploie le premier agent \n");
+			System.out.println("Création d'un agent");
+			Agent a1 = (Agent) c.getConstructor(Object[].class).newInstance(new Object[]{args});
+			System.out.println("Agent crée");
+			a1.init(agentServer, name);//added
+			Iterator<String> iterAd = etapeAddress.iterator();
+			Iterator<String> iterAc = etapeAction.iterator();
+			System.out.println("on l'a initialisé ");
+			while(iterAd.hasNext()){
+				String s = iterAc.next();
+				String s1 = iterAd.next();
+				URI e1 = new URI(s1);
+				String e2 =c.getField(s).getName();
+				_Action ac = (_Action) c.getField(s).get(a1);
+				a1.addEtape(new Etape(e1, ac));
 				new Thread(a1).start();
-			}catch(InstantiationException i){
-				System.out.println(i);
-
-				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
-			}catch(NoSuchMethodException i){
-				System.out.println(i);
-				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
-			}catch(IllegalAccessException i){
-				System.out.println(i);
-				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
-			} catch(IllegalArgumentException i){
-				System.out.println(i);
-				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
-			} catch(InvocationTargetException i){
-				System.out.println(i);
-				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
-			} catch(SecurityException i){
-				System.out.println(i);
-				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
-			} 
-			//--
-		}catch(Exception ex){
-			logger.log(Level.FINE," erreur durant l'instantiation",ex);
+			}
+		}
+		catch(Exception i){
+			System.out.println("server l123");
+			System.out.println(i);
+			logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
 			return;
 		}
 	}

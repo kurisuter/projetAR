@@ -1,34 +1,29 @@
 package jus.aor.mobilagent.kernel;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.jar.JarException;
 
-public class BAMServerClassLoader extends URLClassLoader{
+public class BAMServerClassLoader extends URLClassLoader {
+
+	public BAMServerClassLoader(URL[] urls) {
+		super(urls);
+	}
+
 	
-	@Override
-	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		// TODO Auto-generated method stub
-		return super.findClass(name);
-	}
-	@Override
-	protected Class<?> loadClass(String name, boolean resolve)
-			throws ClassNotFoundException {
-		// TODO Auto-generated method stub
-		return super.loadClass(name, resolve);
+	public BAMServerClassLoader(URL[] urls, ClassLoader loader) {
+		super(urls, loader);
 	}
 
-	public BAMServerClassLoader(URL[] urls, ClassLoader classLoader) {
-		// TODO Auto-generated constructor stub
-		
-		super(urls,classLoader);
-	}
 	
 	@Override
 	protected void addURL(URL url) {
-		// TODO Auto-generated method stub
 		super.addURL(url);
 	}
 	
-	
-
 }

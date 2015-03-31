@@ -1,70 +1,117 @@
 package jus.aor.mobilagent.kernel;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+<<<<<<< HEAD
+import java.net.URL;
+=======
+import java.nio.channels.SocketChannel;
+>>>>>>> parent of 1b059a0... suppresion des warnings
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-
+import java.util.Map;
 
 public class AgentServer extends Thread{
-	protected List<Service<?>> services;
-	private int port;
-	private String servername;
-	public void run(){
-		try{
-			Socket soc=null;
-			ServerSocket serverTCPSoc = new ServerSocket(port);
-			while(true) {
-				
-					//---------------------------------------------------------------------- A COMPLETER
-				if(soc==null){break;}
-				soc = serverTCPSoc.accept();
-				InputStream is = soc.getInputStream();
-				ObjectInputStream dis = new ObjectInputStream(is);
-				
-				BAMAgentClassLoader loader = new BAMAgentClassLoader(null, this.getClass().getClassLoader());
-				Agent a = (Agent)dis.readObject();
-				a.init(loader, this, servername);
-				startAgent(a);
-				System.out.println(a.toString());
-				is.close();
-				dis.close();
-			}
-			serverTCPSoc.close();
-		}catch (Exception e){
-			e.printStackTrace();
-			System.exit(-1);
-		}
-	}
-	public AgentServer(){
-		
-	}
-	public AgentServer(int port,String name) {
-		// TODO Auto-generated constructor stub
-		port = port;
-		this.servername =name;
-	}
+
+	//port d'écoute du server
+	protected int _server_port;
+	//nom du server
+	protected String _server_name;
+	//liste des services qu'offre le server
+	protected Map<String,_Service> _services;
+	//le AgentClassLoader associé a ce server
+	protected BAMAgentClassLoader _agentClasseLoader;
+	protected BAMServerClassLoader _serverClasseLoader;
+	private ServerSocket _socketServer;
+	
 	/**
-	 * Ajoute le service caractérisé par les arguments
-	 * @param name nom du service
-	 * @param classeName classe du service
-	 * @param codeBase codebase du service
-	 * @param args arguments de construction du service
+	 * Initialise le server
+	 * @argument name : nom du server
+	 * @argument port : numero du port d'écoute
 	 */
-	public void addService(String name, String classeName, String codeBase, Object[] args){
-		
+	public AgentServer(String name, int port,BAMAgentClassLoader loader)
+	{
+		_server_port = port;
+		_server_name = name;
+		_services = new HashMap<String, _Service>();
+		_agentClasseLoader = loader;
 	}
-	public void getService(){
-		
+	
+	/**
+	 * Ajoute un service sur le server
+	 */
+	public void addService(_Service<?> service, String classeName)
+	{
+		//_services.put(service.getServiceName(), service);
+		_services.put(classeName,service);
 	}
-	public String site(){
-		return Integer.toString(port);
+	
+	/**
+	 * Recupere le service demander
+	 * @param classeName : le classeName du service a recuperer
+	 */
+	public _Service<?> getService(String classeName)
+	{
+		return _services.get(classeName);
 	}
-	public String toString(){
-		return null;
-	}
-	public void startAgent(Agent agent){
+
+	/**
+	 * Demarre un Agent
+	 */
+	public void startAgent(_Agent agent)
+	{
+		agent.init(_agentClasseLoader, this, _server_name);
+		//we run the agent in a thread, to let the agentServer receive other agents
 		new Thread(agent).start();
+	}
+	
+	/**
+	 * Boucle de reception des agents mobiles
+	 */
+	public void run()
+	{
+		System.out.println(" Running the Agent server on " + this._server_name);
+
+		//on crée un socket
+		try {
+			_socketServer = new ServerSocket(_server_port);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		while(true)
+		{
+			try {
+			//on accept les connections
+			Socket  socketClient = _socketServer.accept();
+			//on instancie les streams
+			InputStream inStr = socketClient.getInputStream();
+			ObjectInputStream objInputStr = new ObjectInputStream(inStr);
+			
+			//gets the serializable jar first
+			_agentClasseLoader = new BAMAgentClassLoader(new URL[]{}, this._serverClasseLoader);
+			Jar jar = (Jar) objInputStr.readObject();
+			//we load the jar in the new BAMAgent
+			_agentClasseLoader.addJar(jar);
+			
+			//on recupere l'agent
+			_Agent agent = (_Agent) objInputStr.readObject();
+			//on initialise l'agent
+			agent.init(_agentClasseLoader,this,_server_name);
+			//enfin on demarre l'agent
+			startAgent(agent);
+			//on ferme les streams
+			objInputStr.close();
+			
+			} catch (IOException | ClassNotFoundException e) {
+				System.out.println("AgentServer l128");
+				System.out.println(e);
+				e.printStackTrace();
+			}	
+		}
 	}
 }

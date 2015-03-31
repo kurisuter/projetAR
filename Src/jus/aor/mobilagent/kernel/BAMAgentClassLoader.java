@@ -29,6 +29,7 @@ public class BAMAgentClassLoader extends URLClassLoader{
 
 	public BAMAgentClassLoader(URL[] urls, ClassLoader classLoader) {
 		super(urls, classLoader);
+		System.out.println("lulu");
 		// TODO Auto-generated constructor stub
 	}
 

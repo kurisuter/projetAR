@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
  * Définit la feuille de route que l'agent va suivre
  * @author  Morat
  */
-class Route implements Iterable<Etape>, Serializable{
+public class Route implements Iterable<Etape>, Serializable{
 	private static final long serialVersionUID = 9081294824590167316L;
 	/** la liste des étapes à parcourir autres que la dernière */
 	protected List<Etape> route;
@@ -40,29 +40,25 @@ class Route implements Iterable<Etape>, Serializable{
 	 * @return la prochaine étape.
 	 */
 	Etape get() throws NoSuchElementException {
-		//A COMPLETER
-		if(hasNext == true){
+		if(this.hasNext)
 			return route.get(0);
-		}else{
+		else
 			return retour;
-		}
-		//-----
 	}
 	/**
 	 * Restitue la prochaine étape et élimine de la route ou la dernière qui est la base de départ.
 	 * @return la prochaine étape.
 	 */
 	Etape next() throws NoSuchElementException {
-		//A COMPLETER
-		if(hasNext()){
-			Etape e = route.get(0);
-			route.remove(0);
-			if (route.size()<=1){hasNext=false;}
-			return e;
-		}else{
-			return retour;
+		if(this.hasNext)
+		{
+			Etape res = route.get(0);
+			this.route.remove(0);
+			this.hasNext = (route.size() != 0);
+			return res;
 		}
-		//-----
+		else
+			return retour;
 	}
 	/**
 	 * Il y a-t-il encore une étape à parcourir.
