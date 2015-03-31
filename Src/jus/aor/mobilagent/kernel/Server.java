@@ -4,6 +4,7 @@
 package jus.aor.mobilagent.kernel;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.URI;
@@ -47,7 +48,7 @@ public final class Server {
 			/* démarrage du server d'agents mobiles attaché à cette machine */
 			//A COMPLETER
 			logger.log(Level.INFO, "démarrage du server d'agents mobiles attaché à cette machine");
-			agentServer = new AgentServer(port);
+			agentServer = new AgentServer(port,this.name);
 			//----
 			/* temporisation de mise en place du server d'agents */
 			Thread.sleep(1000);
@@ -84,16 +85,16 @@ public final class Server {
 	public final void deployAgent(String classeName, Object[] args, String codeBase, List<String> etapeAddress, List<String> etapeAction) {
 		try {
 			//A COMPLETER
-			System.out.println("on deploie le premier agent "+classeName+" \n");
-			BAMAgentClassLoader loader = new BAMAgentClassLoader(new URL[]{new URL("file:///"+codeBase)},this.getClass().getClassLoader());
+			BAMAgentClassLoader loader = new BAMAgentClassLoader(new URL[]{new URL("file:///"+System.getProperty("user.dir")+codeBase)},this.getClass().getClassLoader());
 			Class<?> c = Class.forName(classeName,true,(ClassLoader)loader);
 			/*
 			Method m =c.getMethod(c.getName(), Class.forName("Object[]"));
 			System.out.println(m.toString()+" here \n");
 			Agent a1=(Agent) m.invoke((Object) null,(Object) null);*/
 			try{
-				System.out.println("arguments :"+args.toString()+" .");
-				Agent a1 = (Agent) c.newInstance();
+				Object[] obj = (Object[]) new Object() ;
+//				Agent a1 = (Agent) c.newInstance();
+				Agent a1 = (Agent) c.getConstructor(Object[].class).newInstance(new Object[]{args});
 				System.out.println("on a créé l'agent");
 				a1.init(agentServer, name);//added
 				Iterator<String> iterAd = etapeAddress.iterator();
@@ -113,10 +114,27 @@ public final class Server {
 					//System.out.println(s1);
 				}
 				//System.out.println("on deploie le premier agent \n");
+				new Thread(a1).start();
 			}catch(InstantiationException i){
+				System.out.println(i);
 
 				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
-			}
+			}catch(NoSuchMethodException i){
+				System.out.println(i);
+				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
+			}catch(IllegalAccessException i){
+				System.out.println(i);
+				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
+			} catch(IllegalArgumentException i){
+				System.out.println(i);
+				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
+			} catch(InvocationTargetException i){
+				System.out.println(i);
+				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
+			} catch(SecurityException i){
+				System.out.println(i);
+				logger.log(Level.FINE," erreur durant le lancement de l'agent",i);
+			} 
 			//--
 		}catch(Exception ex){
 			logger.log(Level.FINE," erreur durant l'instantiation",ex);

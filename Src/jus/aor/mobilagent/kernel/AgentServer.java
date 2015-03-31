@@ -1,5 +1,7 @@
 package jus.aor.mobilagent.kernel;
 
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
@@ -8,8 +10,7 @@ import java.util.List;
 public class AgentServer extends Thread{
 	protected List<Service<?>> services;
 	private int port;
-	private Agent agent = null;
-	
+	private String servername;
 	public void run(){
 		try{
 			Socket soc=null;
@@ -17,9 +18,18 @@ public class AgentServer extends Thread{
 			while(true) {
 				
 					//---------------------------------------------------------------------- A COMPLETER
-				soc = serverTCPSoc.accept();
-				
 				if(soc==null){break;}
+				soc = serverTCPSoc.accept();
+				InputStream is = soc.getInputStream();
+				ObjectInputStream dis = new ObjectInputStream(is);
+				
+				BAMAgentClassLoader loader = new BAMAgentClassLoader(null, this.getClass().getClassLoader());
+				Agent a = (Agent)dis.readObject();
+				a.init(loader, this, servername);
+				startAgent(a);
+				System.out.println(a.toString());
+				is.close();
+				dis.close();
 			}
 			serverTCPSoc.close();
 		}catch (Exception e){
@@ -30,9 +40,10 @@ public class AgentServer extends Thread{
 	public AgentServer(){
 		
 	}
-	public AgentServer(int port) {
+	public AgentServer(int port,String name) {
 		// TODO Auto-generated constructor stub
 		port = port;
+		this.servername =name;
 	}
 	/**
 	 * Ajoute le service caractérisé par les arguments
@@ -53,7 +64,7 @@ public class AgentServer extends Thread{
 	public String toString(){
 		return null;
 	}
-	public void startAgent(){
-		agent.run();
+	public void startAgent(Agent agent){
+		new Thread(agent).start();
 	}
 }
